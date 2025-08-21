@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ตัวเตือนวันหมดอายุอาหาร</title>
+  <style>
+    :root{
+      --blue-100:#e7f2ff;  /* ฟ้าอ่อน */
+      --blue-400:#5aa7ff;  /* ฟ้ากลาง */
+      --green:#22c55e;     /* เขียว */
+      --yellow:#facc15;    /* เหลือง */
+      --red:#ef4444;       /* แดง */
+      --red-700:#b91c1c;
+      --ink:#0f172a;       /* ข้อความ */
+      --muted:#6b7280;     /* รอง */
+      --bg:#f7fbff;
+      --card:#ffffff;
+      --ring:#bfdcff;
+      --shadow: 0 6px 20px rgba(15, 23, 42, .08);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", "TH Sarabun New", Arial, sans-serif;
+      color:var(--ink); background:linear-gradient(180deg,var(--blue-100),var(--bg));
+      min-height:100dvh;
+    }
+    header{
+      position:sticky; top:0; z-index:10; backdrop-filter:saturate(120%) blur(6px);
+      background:rgba(231,242,255,.85); border-bottom:1px solid #dbeafe;
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:20px}
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:44px; height:44px; border-radius:12px;
+      background: conic-gradient(from 220deg, var(--green), var(--yellow), var(--red), var(--green));
+      box-shadow: inset 0 0 0 4px #fff, var(--shadow);
+    }
+    h1{font-size:clamp(20px,4vw,28px); margin:0}
+    main{padding:24px 0 64px}
+    .grid{
+      display:grid; gap:18px;
+      grid-template-columns: 1.1fr .9fr;
+    }
+    @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      background:var(--card); border:1px solid #e5e7eb; border-radius:var(--radius); box-shadow:var(--shadow);
+    }
+    .card h2{
+      font-size:18px; margin:0 0 14px;
+    }
+    .card .body{padding:18px}
+    .row{display:grid; gap:12px; grid-template-columns:repeat(12,1fr)}
+    .row+.row{margin-top:12px}
+    label{font-size:13px; color:var(--muted); display:block; margin:0 0 6px}
+    input[type="text"], input[type="date"], input[type="number"], select{
+      width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; background:#fff; color:var(--ink);
+      outline:none; transition:.15s;
+    }
+    input:focus, select:focus{ border-color:var(--ring); box-shadow:0 0 0 3px rgba(93, 168, 255, .18)}
+    .help{font-size:12px; color:var(--muted)}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    .btn{
+      padding:10px 14px; border-radius:10px; border:1px solid #d1d5db; background:#fff; cursor:pointer; font-weight:600;
+    }
+    .btn.primary{ background:var(--blue-400); color:#fff; border-color:var(--blue-400)}
+    .btn.warn{ background:var(--red); color:#fff; border-color:var(--red)}
+    .btn.ghost{ background:transparent }
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+
+    /* ฟิลเตอร์ */
+    .filters{ display:grid; gap:10px; grid-template-columns:repeat(12,1fr)}
+    .filters > *{grid-column: span 3}
+    .filters .wide{grid-column: span 6}
+    @media (max-width:980px){ .filters > *{grid-column:span 6} .filters .wide{grid-column:span 12} }
+
+    /* ตาราง */
+    table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius: 12px; }
+    thead th{position:sticky; top:0; background:#f8fafc; text-align:left; font-size:12px; color:#6b7280; padding:12px; border-bottom:1px solid #e5e7eb}
+    tbody td{padding:14px 12px; border-bottom:1px solid #eef2f7; vertical-align:top}
+    tbody tr:hover{background:#fbfdff}
+    .name{font-weight:600}
+    .muted{color:var(--muted)}
+    .badge{
+      display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:999px; font-size:12px; font-weight:700;
+      border:1px solid transparent;
+    }
+    .b-green{ background:#e8f9ee; color:#116736; border-color:#c9f0d7}
+    .b-yellow{ background:#fff8db; color:#7a5a00; border-color:#f6e59a}
+    .b-red{ background:#ffe5e5; color:#7a1616; border-color:#f8b4b4}
+    .b-gray{ background:#f1f5f9; color:#475569; border-color:#e2e8f0}
+    .pill{display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid #e5e7eb; background:#fff}
+    .table-actions{display:flex; gap:8px}
+    .icon-btn{
+      border:1px solid #e5e7eb; background:#fff; border-radius:8px; padding:6px 8px; cursor:pointer;
+    }
+    .bell.on{ color:var(--green); border-color:#cdeccb; background:#f3fcf3 }
+    .hint{
+      background:#fff9e6; border:1px dashed #facc15; padding:10px 12px; border-radius:10px; font-size:13px; color:#7a5a00;
+    }
+    footer{color:#64748b; font-size:12px; text-align:center; padding:24px 12px}
+    .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap brand">
+    <div aria-hidden="true" class="logo"></div>
+    <div>
+      <h1>ตัวเตือนวันหมดอายุอาหาร</h1>
+      <div class="muted" style="font-size:12px">สีหลัก: ฟ้าอ่อน · เหลือง · แดง · เขียว</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <!-- ฟอร์ม -->
+    <section class="card">
+      <div class="body">
+        <h2 id="formTitle">เพิ่มรายการอาหาร</h2>
+        <form id="foodForm" novalidate>
+          <input type="hidden" id="editingId" value="">
+          <div class="row">
+            <div style="grid-column: span 6">
+              <label for="name">ชื่ออาหาร *</label>
+              <input id="name" type="text" placeholder="เช่น นม UHT / ไก่สับ" required />
+            </div>
+            <div style="grid-column: span 6">
+              <label for="type">ประเภทอาหาร</label>
+              <input list="typeList" id="type" type="text" placeholder="เลือกหรือพิมพ์เพิ่ม" />
+              <datalist id="typeList">
+                <option>ผัก/ผลไม้</option><option>เนื้อสัตว์</option><option>อาหารแห้ง</option>
+                <option>นม/ไข่</option><option>อาหารแช่แข็ง</option><option>เครื่องดื่ม</option><option>อื่น ๆ</option>
+              </datalist>
+            </div>
+          </div>
+
+          <div class="row">
+            <div style="grid-column: span 4">
+              <label for="storage">วิธีเก็บรักษา</label>
+              <input list="storeList" id="storage" type="text" placeholder="เช่น แช่เย็น" />
+              <datalist id="storeList">
+                <option>แช่เย็น</option><option>แช่แข็ง</option><option>อุณหภูมิห้อง</option>
+                <option>สูญญากาศ</option><option>ภาชนะปิดสนิท</option>
+              </datalist>
+            </div>
+            <div style="grid-column: span 4">
+              <label for="buyDate">วันซื้อ</label>
+              <input id="buyDate" type="date" />
+            </div>
+            <div style="grid-column: span 4">
+              <label for="expDate">วันหมดอายุ *</label>
+              <input id="expDate" type="date" required />
+            </div>
+          </div>
+
+          <div class="row">
+            <div style="grid-column: span 4">
+              <label for="notifyDays">เตือนล่วงหน้า (วัน)</label>
+              <input id="notifyDays" type="number" min="0" step="1" value="3" />
+              <div class="help">จะเตือนเมื่อเข้าสู่ช่วง X วันก่อนหมดอายุ</div>
+            </div>
+            <div style="grid-column: span 8; align-self:end">
+              <div class="hint">
+                เคล็ดลับ: สี <b class="b-green badge">เขียว</b> = ปลอดภัย,
+                <b class="b-yellow badge">เหลือง</b> = ใกล้หมดอายุ,
+                <b class="b-red badge">แดง</b> = เร่งใช้/ทิ้ง,
+                <b class="b-gray badge">เทา</b> = หมดอายุแล้ว
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" type="submit" id="saveBtn">บันทึก</button>
+            <button class="btn" type="button" id="resetBtn">ล้างฟอร์ม</button>
+            <button class="btn ghost" type="button" id="exampleBtn">เพิ่มตัวอย่าง</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ฟิลเตอร์ & การตั้งค่า -->
+    <section class="card">
+      <div class="body">
+        <h2>ค้นหา / กรอง / การแจ้งเตือน</h2>
+
+        <div class="filters" style="margin-bottom:10px">
+          <div class="wide">
+            <label for="q">ค้นหา</label>
+            <input id="q" type="text" placeholder="พิมพ์ชื่ออาหาร / ประเภท / วิธีเก็บ" />
+          </div>
+          <div>
+            <label for="filterType">ประเภท</label>
+            <select id="filterType"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div>
+            <label for="filterStore">การเก็บรักษา</label>
+            <select id="filterStore"><option value="">ทั้งหมด</option></select>
+          </div>
+          <div>
+            <label for="filterStatus">สถานะ</label>
+            <select id="filterStatus">
+              <option value="">ทั้งหมด</option>
+              <option value="ok">ปลอดภัย</option>
+              <option value="warn">ใกล้หมดอายุ</option>
+              <option value="due">ใกล้มาก (<=2 วัน)</option>
+              <option value="expired">หมดอายุแล้ว</option>
+            </select>
+          </div>
+          <div class="">
+            <label for="sortBy">เรียงลำดับ</label>
+            <select id="sortBy">
+              <option value="soonest">ใกล้หมดก่อน</option>
+              <option value="expDate">ตามวันหมดอายุ (เก่า→ใหม่)</option>
+              <option value="buyDate">ตามวันซื้อ (ใหม่→เก่า)</option>
+              <option value="name">ชื่อ (A→Z)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="exportBtn">ส่งออก JSON</button>
+          <input id="importInput" type="file" accept=".json,application/json" class="sr-only" />
+          <button class="btn" id="importBtn">นำเข้า JSON</button>
+          <button class="btn" id="enableNotifyBtn">เปิดการแจ้งเตือนเบราว์เซอร์</button>
+        </div>
+
+        <p class="help" style="margin-top:8
